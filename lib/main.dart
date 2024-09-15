@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import 'CoffeeApp/Page/BottomBar_Coffee.dart';
 import 'CoffeeApp/Page/Cart_Coffee1.dart';
+import 'CoffeeApp/Page/History_Coffee.dart';
 import 'CoffeeApp/Page/Homepage_Coffee.dart';
 import 'CoffeeApp/Page/Signup_Coffee.dart';
 import 'CoffeeApp/Page/favorite_controller.dart';
@@ -17,12 +18,15 @@ import 'firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+    options: DefaultFirebaseOptions.android,
   );
 
   // Dependency injection
   Get.put(FavoriteController());
+  Get.put(OrderHistoryManager());
   Get.put(CartController());
+ //Get.put(OrderHistoryController());
+
 
   runApp(MyApp());
 }

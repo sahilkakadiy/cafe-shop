@@ -5,8 +5,11 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_image_slideshow/flutter_image_slideshow.dart';
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'Cart_Coffee.dart';
 import 'Cart_Coffee1.dart';
+import 'History_Coffee.dart';
+import 'Notification_Coffee.dart';
 import 'Profile_Coffee.dart';
 import 'favorite_controller.dart';
 import '../Model/ProductModel_Coffee.dart';
@@ -19,7 +22,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final OrderHistoryManager orderHistoryManager = Get.find<OrderHistoryManager>();
+ // final OrderHistoryController orderHistoryController = Get.find<OrderHistoryController>();
   final FavoriteController favoriteController = Get.find<FavoriteController>();
+ // final OrderHistoryController orderHistoryController = Get.find<OrderHistoryController>();
   final List<String> _titles = ['HomePage', 'Favorite', 'Cart', 'Profile'];
   final List<IconData> _icons = [
     Icons.home,
@@ -68,10 +74,22 @@ class _HomePageState extends State<HomePage> {
         break;
     }
   }
+  List<String> selectedProductIds = ['2', '4', '5', '7', '8'];
 
+  // Method to toggle product selection
+  void toggleProductSelection(String productId) {
+    setState(() {
+      if (selectedProductIds.contains(productId)) {
+        selectedProductIds.remove(productId); // Remove if already selected
+      } else {
+        selectedProductIds.add(productId); // Add if not selected
+      }
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.brown.shade50,
       drawer: Drawer(
         child: Stack(
           children: [
@@ -230,9 +248,13 @@ class _HomePageState extends State<HomePage> {
                         bottomLeft: Radius.circular(30),
                         bottomRight: Radius.circular(30))),
                 title: Text(
-                  'Coffee Delights',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold, color: Colors.white),
+                  'AKTLOC',
+                  style: GoogleFonts.lato(
+                      textStyle: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 20,
+                      )),// You can adjust the font size as needed
                 ),
                 actions: [
                   IconButton(
@@ -241,6 +263,14 @@ class _HomePageState extends State<HomePage> {
                       },
                       icon: Icon(
                         Icons.favorite,
+                        color: Colors.white,
+                      )),
+                  IconButton(
+                      onPressed: () {
+                        Get.to(OrderHistoryPage());
+                      },
+                      icon: Icon(
+                        Icons.bookmark,
                         color: Colors.white,
                       )),
                 ],
@@ -253,6 +283,37 @@ class _HomePageState extends State<HomePage> {
                 pinned: true,
                 floating: true,
                 snap: true,
+              ),
+              SliverToBoxAdapter(
+                child: Container(color: Colors.brown.shade50,
+                  height: 100,
+                  padding: EdgeInsets.only(top: 10,bottom: 10),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: products.where((product) => selectedProductIds.contains(product.id)).map((product) {
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DetailsPageb(category: product.name),
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 10, left: 10),
+                            child: CircleAvatar(
+                              radius: 32.5,
+                              backgroundImage: NetworkImage(product.image),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
               ),
               SliverGrid(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

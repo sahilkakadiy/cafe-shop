@@ -276,6 +276,7 @@ class _BottenBarChatState extends State<BottenBarChat> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.brown.shade50,
       body: IndexedStack(
         index: _selectedIndex,
         children: _pages,

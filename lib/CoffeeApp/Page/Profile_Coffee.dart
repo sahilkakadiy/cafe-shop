@@ -1,16 +1,21 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:coffee/CoffeeApp/Model/UserModel_Coffee.dart';
+import 'package:coffee/CoffeeApp/Page/Homepage_Coffee.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'History_Coffee.dart';
+import 'Notification_Coffee.dart';
 import 'Signup_Coffee.dart';
 import 'package:flutter/material.dart';
-import 'package:coffee/CoffeeApp/Page/CartHistoryScreen.dart'; // Ensure this import is correct
+
+import 'favorite_controller.dart';
 
 //
 // class ProfilePage extends StatelessWidget {
@@ -955,178 +960,394 @@ class ProfileScreens extends StatelessWidget {
     final authService = context.watch<AuthenticationService>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Profile'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () async {
-              await authService.signOut();
-              Navigator.of(context).pop(); // Navigate to login screen or home
-            },
-          ),
-        ],
-      ),
-      body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance.collection('users').doc(authService.user!.uid).get(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || !snapshot.data!.exists) {
-            return Center(child: Text('No user data found.'));
-          } else {
-            final userData = snapshot.data!.data() as Map<String, dynamic>;
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: Colors.brown.shade50,
+      // appBar: AppBar(
+      //   title: Text('Profile'),
+      //   leading: BackButton(
+      //     onPressed: () {
+      //       Get.to(HomePage());
+      //     },
+      //   ),
+      //   actions: [
+      //     IconButton(
+      //       icon: Icon(Icons.logout),
+      //       onPressed: () async {
+      //         await authService.signOut();
+      //         Navigator.of(context).pop(); // Navigate to login screen or home
+      //       },
+      //     ),
+      //     // IconButton(onPressed: () {
+      //     //   Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => OrderHistoryScreen(),));
+      //     // }, icon: Icon(Icons.history))
+      //   ],
+      // ),
+
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            backgroundColor: Colors.brown.shade500,
+            shape: ContinuousRectangleBorder(
+                borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(30),
+                    bottomRight: Radius.circular(30))),
+            expandedHeight: 200.0,
+            floating: false,
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(
+                '${authService.user!.displayName}',
+                style: GoogleFonts.lato(
+                    textStyle: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20,
+                    )),// You can adjust the font size as needed
+              ),
+              background: Stack(
+                alignment: Alignment.bottomRight,
                 children: [
-                  // Profile Picture with Overlay Icon
-                  Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      GestureDetector(
-                        onTap: () async {
-                          await _showImagePickerDialog(context);
-                        },
-                        child: CircleAvatar(
-                          radius: 70,
-                          backgroundImage: userData['profilePictureUrl'] != null
-                              ? NetworkImage(userData['profilePictureUrl'])
-                              : AssetImage('assets/default_profile_picture.png') as ImageProvider,
-                          backgroundColor: Colors.grey.shade200,
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black26,
-                                blurRadius: 6,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          child: IconButton(
-                            icon: Icon(Icons.camera_alt, color: Colors.blue),
-                            onPressed: () async {
-                              await _showImagePickerDialog(context);
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
+                  Image.network(
+                    'https://img.freepik.com/premium-photo/refreshing-small-coffee-shop-creamy-atmosphere_943281-44931.jpg?w=360', // Placeholder background image
+                    fit: BoxFit.cover,
+                    width: double.infinity,
                   ),
-                  SizedBox(width: 20),
-                  // User Info
-                  Column(crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Name: ${userData['name']}',
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 8),
-                      Text('Email: ${userData['email']}',
-                          style: TextStyle(fontSize: 18)),
-                      SizedBox(height: 30),
-                      // Edit Profile Button
-                      ElevatedButton(
-                        onPressed: () {
-                          _showEditDialog(context, userData);
-                        },
-                        child: Text('Edit Profile'),
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12), backgroundColor: Colors.blue,
-                          textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ), ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => CartHistoryScreen()),
-                          );
-                        },
-                        child: Text('View Cart History'),
+                  Positioned(
+                    bottom: 16.0,
+                    right: 16.0,
+                    child: GestureDetector(
+                      onTap: () async {
+                        await _showImagePickerDialog(context);
+                      },
+                      child:CircleAvatar(
+                        radius: 60,
+                        backgroundImage: authService.user?.photoURL != null
+                            ? NetworkImage(authService.user!.photoURL!)
+                            : AssetImage('assets/default_profile_picture.png'),
+                        backgroundColor: Colors.grey.shade200,
                       ),
-                    ],
+
+                    ),
                   ),
                 ],
               ),
-            );
-            // return Padding(
-            //   padding: const EdgeInsets.all(16.0),
-            //   child: Column(
-            //     crossAxisAlignment: CrossAxisAlignment.start,
-            //     children: [
-            //       // Profile Picture
-            //       Center(
-            //         child: Stack(
-            //           alignment: Alignment.center,
-            //           children: [
-            //             GestureDetector(
-            //               onTap: () async {
-            //                 await _showImagePickerDialog(context);
-            //               },
-            //               child: CircleAvatar(
-            //                 radius: 70,
-            //                 backgroundImage: userData['profilePictureUrl'] != null
-            //                     ? NetworkImage(userData['profilePictureUrl'])
-            //                     : AssetImage('assets/default_profile_picture.png') as ImageProvider,
-            //                 backgroundColor: Colors.grey.shade200,
-            //               ),
-            //             ),
-            //             Positioned(
-            //               bottom: 0,
-            //               right: 0,
-            //               child: Container(
-            //                 decoration: BoxDecoration(
-            //                   color: Colors.white,
-            //                   shape: BoxShape.circle,
-            //                   boxShadow: [
-            //                     BoxShadow(
-            //                       color: Colors.black26,
-            //                       blurRadius: 4,
-            //                       spreadRadius: 1,
-            //                     ),
-            //                   ],
-            //                 ),
-            //                 child: IconButton(
-            //                   icon: Icon(Icons.camera_alt, color: Colors.blue),
-            //                   onPressed: () async {
-            //                     await _showImagePickerDialog(context);
-            //                   },
-            //                 ),
-            //               ),
-            //             ),
-            //           ],
-            //         ),
-            //       ),
-            //       SizedBox(height: 20),
-            //       // User Info
-            //       Text('Name: ${userData['name']}', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            //       SizedBox(height: 8),
-            //       Text('Email: ${userData['email']}', style: TextStyle(fontSize: 18)),
-            //       SizedBox(height: 20),
-            //       ElevatedButton(
-            //         onPressed: () {
-            //           _showEditDialog(context, userData);
-            //         },
-            //         child: Text('Edit Profile'),
-            //       ),
-            //     ],
-            //   ),
-            // );
-          }
-        },
+            ),
+            leading: BackButton(
+              onPressed: () {
+                Get.to(HomePage());
+              },
+            ),
+            actions: [
+              IconButton(
+                icon: Icon(Icons.logout),
+                onPressed: () async {
+                  await authService.signOut();
+                  Navigator.of(context).pop(); // Navigate to login screen or home
+                },
+              ),
+            ],
+          ),
+          SliverToBoxAdapter(
+            child: FutureBuilder<DocumentSnapshot>(
+              future: FirebaseFirestore.instance.collection('users').doc(authService.user!.uid).get(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (!snapshot.hasData || !snapshot.data!.exists) {
+                  return Center(child: Text('No user data found.'));
+                } else {
+                  final userData = snapshot.data!.data() as Map<String, dynamic>;
+                  return Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 20),
+                        // User Info
+                        Text('Name: ${userData['name']}', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                        SizedBox(height: 8),
+                        Text('Email: ${userData['email']}', style: TextStyle(fontSize: 18)),
+                        SizedBox(height: 30),
+                        // Edit Profile Button
+                        ElevatedButton(
+                          onPressed: () {
+                            _showEditDialog(context, userData);
+                          },
+                          child: Text('Edit Profile',style: GoogleFonts.lato(
+                              textStyle: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.brown,
+                                fontSize: 12,
+                              ))),
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            backgroundColor: Colors.brown.shade50,
+                            textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+              },
+            ),
+          ),
+          SliverList(
+            delegate: SliverChildListDelegate.fixed([
+              ListTile(
+                leading: Icon(Icons.notifications_on_rounded,color: Colors.yellow.shade900,),
+                title: Text(
+                  'Notifications',
+                  style: GoogleFonts.lato(
+                    textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w400,color: Colors.brown.shade900),
+                  ),
+                ),
+                onTap: () {
+                  Get.to(notificaionpage());
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.favorite_sharp,color: Colors.red.shade900,),
+                title: Text(
+                  'Favorites',
+                  style: GoogleFonts.lato(
+                    textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w400,color: Colors.brown.shade900),
+                  ),
+                ),
+                onTap: () {
+                  Get.to(Favoritescreen());
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.bookmark_outlined,color: Colors.blue.shade900,),
+                title: Text(
+                  'Bookmarks',
+                  style: GoogleFonts.lato(
+                    textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w400,color: Colors.brown.shade900),
+                  ),
+                ),
+                onTap: () {
+                  Get.to(OrderHistoryPage());
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.info_sharp,color: Colors.green.shade900,),
+                title: Text(
+                  'Information',
+                  style: GoogleFonts.lato(
+                    textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w400,color: Colors.brown.shade900),
+                  ),
+                ),
+              ),
+              Expanded(child: SizedBox(height: 150,)),
+              ListTile(
+                leading: Icon(Icons.logout_outlined,color: Colors.black,),
+                title: Text(
+                  'Logout',
+                  style: GoogleFonts.lato(
+                    textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w400,color: Colors.brown.shade900),
+                  ),
+                ),
+                onTap: () async {
+                  await authService.signOut();
+                  Navigator.of(context).pop(); // Navigate to login screen or home
+                },
+              ),
+            ]),
+          )        ],
+        // child: FutureBuilder<DocumentSnapshot>(
+        //   future: FirebaseFirestore.instance.collection('users').doc(authService.user!.uid).get(),
+        //   builder: (context, snapshot) {
+        //     if (snapshot.connectionState == ConnectionState.waiting) {
+        //       return Center(child: CircularProgressIndicator());
+        //     } else if (snapshot.hasError) {
+        //       return Center(child: Text('Error: ${snapshot.error}'));
+        //     } else if (!snapshot.hasData || !snapshot.data!.exists) {
+        //       return Center(child: Text('No user data found.'));
+        //     } else {
+        //       final userData = snapshot.data!.data() as Map<String, dynamic>;
+        //       return Padding(
+        //         padding: const EdgeInsets.all(16.0),
+        //         child: Column(
+        //           crossAxisAlignment: CrossAxisAlignment.start,
+        //           children: [
+        //             // Profile Picture with Overlay Icon
+        //             Stack(
+        //               alignment: Alignment.bottomRight,
+        //               children: [
+        //                 GestureDetector(
+        //                   onTap: () async {
+        //                     await _showImagePickerDialog(context);
+        //                   },
+        //                   child: CircleAvatar(
+        //                     radius: 70,
+        //                     backgroundImage: userData['profilePictureUrl'] != null
+        //                         ? NetworkImage(userData['profilePictureUrl'])
+        //                         : AssetImage('assets/default_profile_picture.png') as ImageProvider,
+        //                     backgroundColor: Colors.grey.shade200,
+        //                   ),
+        //                 ),
+        //                 Positioned(
+        //                   bottom: 0,
+        //                   right: 0,
+        //                   child: Container(
+        //                     decoration: BoxDecoration(
+        //                       color: Colors.white,
+        //                       shape: BoxShape.circle,
+        //                       boxShadow: [
+        //                         BoxShadow(
+        //                           color: Colors.black26,
+        //                           blurRadius: 6,
+        //                           spreadRadius: 1,
+        //                         ),
+        //                       ],
+        //                     ),
+        //                     child: IconButton(
+        //                       icon: Icon(Icons.camera_alt, color: Colors.blue),
+        //                       onPressed: () async {
+        //                         await _showImagePickerDialog(context);
+        //                       },
+        //                     ),
+        //                   ),
+        //                 ),
+        //               ],
+        //             ),
+        //             SizedBox(height: 20),
+        //             // User Info
+        //             Column(crossAxisAlignment: CrossAxisAlignment.start,
+        //               children: [
+        //                 Text('Name: ${userData['name']}',
+        //                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        //                 SizedBox(height: 8),
+        //                 Text('Email: ${userData['email']}',
+        //                     style: TextStyle(fontSize: 18)),
+        //                 SizedBox(height: 30),
+        //                 // Edit Profile Button
+        //                 ElevatedButton(
+        //                   onPressed: () {
+        //                     _showEditDialog(context, userData);
+        //                   },
+        //                   child: Text('Edit Profile'),
+        //                   style: ElevatedButton.styleFrom(
+        //                     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12), backgroundColor: Colors.blue,
+        //                     textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        //                   ),
+        //                 ),
+        //               ],
+        //             ),
+        //           ],
+        //         ),
+        //       );
+        //       // return Padding(
+        //       //   padding: const EdgeInsets.all(16.0),
+        //       //   child: Column(
+        //       //     crossAxisAlignment: CrossAxisAlignment.start,
+        //       //     children: [
+        //       //       // Profile Picture
+        //       //       Center(
+        //       //         child: Stack(
+        //       //           alignment: Alignment.center,
+        //       //           children: [
+        //       //             GestureDetector(
+        //       //               onTap: () async {
+        //       //                 await _showImagePickerDialog(context);
+        //       //               },
+        //       //               child: CircleAvatar(
+        //       //                 radius: 70,
+        //       //                 backgroundImage: userData['profilePictureUrl'] != null
+        //       //                     ? NetworkImage(userData['profilePictureUrl'])
+        //       //                     : AssetImage('assets/default_profile_picture.png') as ImageProvider,
+        //       //                 backgroundColor: Colors.grey.shade200,
+        //       //               ),
+        //       //             ),
+        //       //             Positioned(
+        //       //               bottom: 0,
+        //       //               right: 0,
+        //       //               child: Container(
+        //       //                 decoration: BoxDecoration(
+        //       //                   color: Colors.white,
+        //       //                   shape: BoxShape.circle,
+        //       //                   boxShadow: [
+        //       //                     BoxShadow(
+        //       //                       color: Colors.black26,
+        //       //                       blurRadius: 4,
+        //       //                       spreadRadius: 1,
+        //       //                     ),
+        //       //                   ],
+        //       //                 ),
+        //       //                 child: IconButton(
+        //       //                   icon: Icon(Icons.camera_alt, color: Colors.blue),
+        //       //                   onPressed: () async {
+        //       //                     await _showImagePickerDialog(context);
+        //       //                   },
+        //       //                 ),
+        //       //               ),
+        //       //             ),
+        //       //           ],
+        //       //         ),
+        //       //       ),
+        //       //       SizedBox(height: 20),
+        //       //       // User Info
+        //       //       Text('Name: ${userData['name']}', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        //       //       SizedBox(height: 8),
+        //       //       Text('Email: ${userData['email']}', style: TextStyle(fontSize: 18)),
+        //       //       SizedBox(height: 20),
+        //       //       ElevatedButton(
+        //       //         onPressed: () {
+        //       //           _showEditDialog(context, userData);
+        //       //         },
+        //       //         child: Text('Edit Profile'),
+        //       //       ),
+        //       //     ],
+        //       //   ),
+        //       // );
+        //     }
+        //   },
+        // ),
       ),
     );
   }
 
+  // Future<void> _showImagePickerDialog(BuildContext context) async {
+  //   final picker = ImagePicker();
+  //   final selectedOption = await showDialog<ImageSource>(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: Text('Select Image Source'),
+  //       actions: [
+  //         TextButton(
+  //           child: Text('Camera'),
+  //           onPressed: () => Navigator.pop(context, ImageSource.camera),
+  //         ),
+  //         TextButton(
+  //           child: Text('Gallery'),
+  //           onPressed: () => Navigator.pop(context, ImageSource.gallery),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  //
+  //   if (selectedOption != null) {
+  //     final pickedFile = await picker.pickImage(source: selectedOption);
+  //
+  //     if (pickedFile != null) {
+  //       final imageFile = File(pickedFile.path);
+  //       final authService = context.read<AuthenticationService>();
+  //
+  //       try {
+  //         // Update profile picture in Firebase Storage and get the URL
+  //         final imageUrl = await authService.updateProfilePicture(imageFile);
+  //         await FirebaseFirestore.instance.collection('users').doc(authService.user!.uid).update({
+  //           'profilePictureUrl': imageUrl,
+  //         });
+  //         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Profile picture updated successfully.')));
+  //       } catch (e) {
+  //         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update profile picture.')));
+  //       }
+  //     }
+  //   }
+  // }
   Future<void> _showImagePickerDialog(BuildContext context) async {
     final picker = ImagePicker();
     final selectedOption = await showDialog<ImageSource>(
@@ -1166,7 +1387,6 @@ class ProfileScreens extends StatelessWidget {
       }
     }
   }
-
   Future<void> _showEditDialog(BuildContext context, Map<String, dynamic> userData) async {
     final nameController = TextEditingController(text: userData['name']);
     final emailController = TextEditingController(text: userData['email']);
